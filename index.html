@@ -48,6 +48,9 @@
           <span id="story-title" class="story-title-text"></span>
         </div>
         <div class="topbar-actions">
+          <button id="voice-btn" class="btn-icon" onclick="toggleSceneVoice()" title="Play Scene Voice">
+            🔊 Listen
+          </button>
           <button id="history-btn" class="btn-icon" onclick="toggleHistory()" title="Story History">
             📜 History
           </button>
@@ -75,6 +78,11 @@
           <div class="scene-card">
             <div id="emotion-badge" class="emotion-badge" style="display:none"></div>
             <p id="scene-text" class="scene-text"></p>
+            <div id="scene-art-panel" class="scene-art-panel hidden" aria-live="polite">
+              <div id="scene-art-status" class="scene-art-status">Generating scene artwork…</div>
+              <img id="scene-art-image" class="scene-art-image" alt="Generated scene artwork"/>
+              <div id="scene-art-caption" class="scene-art-caption"></div>
+            </div>
           </div>
           <div id="choices-area" class="choices-grid"></div>
         </div>
@@ -83,6 +91,7 @@
     </section>
   </div>
 
+  <script src="config.js"></script>
   <script src="story.js"></script>
   <script src="visuals.js"></script>
   <script src="app.js"></script>
