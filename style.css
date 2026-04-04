@@ -254,6 +254,55 @@ textarea::placeholder { color:var(--muted); }
 }
 .scene-text { font-size:1rem; line-height:1.8; color:var(--text); }
 
+.scene-art-panel {
+  margin-top:1rem;
+  border:1px solid rgba(201,169,110,.18);
+  border-radius:12px;
+  background:rgba(255,255,255,.03);
+  overflow:hidden;
+  min-height:180px;
+  position:relative;
+}
+.scene-art-panel.hidden { display:none; }
+.scene-art-panel.loading {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:
+    linear-gradient(110deg, rgba(26,26,46,.95) 30%, rgba(42,42,62,.95) 50%, rgba(26,26,46,.95) 70%);
+  background-size:200% 100%;
+  animation:shimmer 1.5s infinite;
+}
+.scene-art-status {
+  padding:1rem 1.2rem;
+  text-align:center;
+  color:var(--muted);
+  font-style:italic;
+  line-height:1.6;
+}
+.scene-art-image {
+  display:block;
+  width:min(100%, 500px);
+  aspect-ratio:1 / 1;
+  margin:0 auto;
+  max-height:500px;
+  object-fit:cover;
+  opacity:0;
+  transition:opacity .35s ease;
+  background:#12121a;
+}
+.scene-art-image.loaded { opacity:1; }
+.scene-art-caption {
+  padding:.75rem 1rem .9rem;
+  color:var(--accent);
+  font-family:'Cinzel',serif;
+  font-size:.74rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  background:rgba(6,6,16,.85);
+  border-top:1px solid rgba(201,169,110,.16);
+}
+
 /* Choices */
 .choices-grid { display:flex; flex-direction:column; gap:.6rem; }
 .choice-btn {
@@ -286,3 +335,27 @@ textarea::placeholder { color:var(--muted); }
 ::-webkit-scrollbar { width:4px; }
 ::-webkit-scrollbar-track { background:transparent; }
 ::-webkit-scrollbar-thumb { background:rgba(201,169,110,.25); border-radius:4px; }
+
+@media (max-width: 900px) {
+  body { overflow:auto; }
+  #app { min-height:100vh; height:auto; }
+  #story-screen { overflow:auto; }
+  .story-layout {
+    flex-direction:column;
+    align-items:stretch;
+    overflow:visible;
+  }
+  .portrait-rail {
+    flex-direction:row;
+    width:100%;
+    max-width:100%;
+    overflow-x:auto;
+    overflow-y:hidden;
+    justify-content:flex-start;
+  }
+  .scene-art-image { max-height:220px; }
+  .history-panel {
+    width:min(360px, 88vw);
+    right:calc(-1 * min(360px, 88vw));
+  }
+}

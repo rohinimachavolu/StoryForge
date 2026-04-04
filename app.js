@@ -7,7 +7,9 @@ const state = {
   history:      [],   // [{ scene, emotion, chosen }]
   currentScene: null,
   sceneIndex:   0,
-  historyOpen:  false
+  historyOpen:  false,
+  sceneImageUrl: '',
+  sceneImageRequestId: 0
 };
 
 const EMOTION_CONFIG = {
@@ -29,6 +31,7 @@ function showLoading() {
   document.getElementById('emotion-badge').style.display = 'none';
   document.getElementById('choices-area').innerHTML = `
     <div class="loading"><div class="spinner"></div>Generating next scene…</div>`;
+  setSceneArtLoading('Preparing comic artwork… FLUX can take a little while.');
 }
 
 function disableChoices(d) {
@@ -36,9 +39,20 @@ function disableChoices(d) {
 }
 
 // ── Background scene image ─────────────────────────────────────────────────
-function updateSceneBg(location, emotion) {
+async function updateSceneBg(sceneData) {
   const bg  = document.getElementById('scene-bg');
-  const url = getSceneBgUrl(location, emotion);
+  const requestId = ++state.sceneImageRequestId;
+  const location = sceneData.location;
+
+  setSceneArtLoading(location ? `Generating artwork for ${location}… this can take 15-40 seconds.` : 'Generating scene artwork… this can take 15-40 seconds.');
+
+  const imageResult = await getSceneBgUrl(sceneData);
+  const url = imageResult.url;
+  if (requestId !== state.sceneImageRequestId) {
+    if (url && url.startsWith('blob:')) URL.revokeObjectURL(url);
+    return;
+  }
+
   // Use an <img> tag as a hidden loader — avoids CORS preflight
   const loader = document.createElement('img');
   loader.crossOrigin = 'anonymous';
@@ -54,6 +68,67 @@ function updateSceneBg(location, emotion) {
     loader.remove();
   };
   document.body.appendChild(loader);
+
+  setSceneArtImage(url, location, imageResult.provider, sceneData.comicCaption);
+}
+
+function setSceneArtLoading(message) {
+  const panel = document.getElementById('scene-art-panel');
+  const status = document.getElementById('scene-art-status');
+  const image = document.getElementById('scene-art-image');
+  const caption = document.getElementById('scene-art-caption');
+
+  panel.classList.remove('hidden', 'loaded');
+  panel.classList.add('loading');
+  status.textContent = message;
+  status.style.display = 'block';
+  image.classList.remove('loaded');
+  caption.textContent = '';
+}
+
+function setSceneArtImage(url, location, provider, comicCaption) {
+  const panel = document.getElementById('scene-art-panel');
+  const status = document.getElementById('scene-art-status');
+  const image = document.getElementById('scene-art-image');
+  const caption = document.getElementById('scene-art-caption');
+  const previousUrl = state.sceneImageUrl;
+
+  panel.classList.remove('hidden', 'loading');
+  panel.classList.add('loaded');
+  status.style.display = 'none';
+
+  image.onload = () => image.classList.add('loaded');
+  image.onerror = () => {
+    const fallbackUrl = getPollinationsSceneBgUrl(location, state.currentScene?.emotion || 'calm');
+    const canFallback = provider !== 'pollinations' && image.src !== fallbackUrl;
+
+    if (canFallback) {
+      panel.classList.remove('loaded');
+      panel.classList.add('loading');
+      status.textContent = location
+        ? `Retrying artwork for ${location} with fallback rendering…`
+        : 'Retrying scene artwork with fallback rendering…';
+      status.style.display = 'block';
+      image.classList.remove('loaded');
+      setSceneArtImage(fallbackUrl, location, 'pollinations');
+      return;
+    }
+
+    panel.classList.remove('loaded', 'loading');
+    status.textContent = location
+      ? `We couldn't render artwork for ${location}.`
+      : "We couldn't render the scene artwork.";
+    status.style.display = 'block';
+    image.classList.remove('loaded');
+  };
+  image.src = url;
+  image.alt = location ? `Generated artwork for ${location}` : 'Generated scene artwork';
+  caption.textContent = comicCaption || '';
+
+  if (previousUrl && previousUrl !== url && previousUrl.startsWith('blob:')) {
+    URL.revokeObjectURL(previousUrl);
+  }
+  state.sceneImageUrl = url;
 }
 
 // ── Character portraits ────────────────────────────────────────────────────
@@ -105,7 +180,7 @@ function renderScene(data) {
     </button>`).join('');
 
   // bg + portraits
-  if (data.location) updateSceneBg(data.location, data.emotion);
+  if (data.location || data.comicPrompt) updateSceneBg(data);
   if (data.characters) renderPortraits(data.characters);
 
   // p5 ambient particles
@@ -115,6 +190,11 @@ function renderScene(data) {
 
 function showError(msg) {
   document.getElementById('scene-text').textContent = `⚠ ${msg}`;
+  const panel = document.getElementById('scene-art-panel');
+  const status = document.getElementById('scene-art-status');
+  panel.classList.remove('loading', 'loaded');
+  panel.classList.add('hidden');
+  status.textContent = '';
 }
 
 // ── History panel ──────────────────────────────────────────────────────────
@@ -206,14 +286,23 @@ async function makeChoice(choice) {
 }
 
 function resetStory() {
+  if (state.sceneImageUrl && state.sceneImageUrl.startsWith('blob:')) {
+    URL.revokeObjectURL(state.sceneImageUrl);
+  }
   Object.assign(state, {
     prompt:'', title:'', characters:[], history:[],
-    currentScene:null, sceneIndex:0, historyOpen:false
+    currentScene:null, sceneIndex:0, historyOpen:false,
+    sceneImageUrl:'', sceneImageRequestId:0
   });
   document.getElementById('story-screen').classList.remove('active');
   document.getElementById('intro-screen').style.display = 'flex';
   document.getElementById('story-title').textContent = '';
   document.getElementById('scene-bg').style.backgroundImage = '';
+  document.getElementById('scene-art-panel').className = 'scene-art-panel hidden';
+  document.getElementById('scene-art-status').textContent = '';
+  document.getElementById('scene-art-image').src = '';
+  document.getElementById('scene-art-image').classList.remove('loaded');
+  document.getElementById('scene-art-caption').textContent = '';
   document.getElementById('history-panel').classList.remove('open');
   document.getElementById('history-btn').classList.remove('active');
   updateBG('calm');
