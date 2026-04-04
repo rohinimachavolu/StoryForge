@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Storyforge</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+</head>
+<body>
+  <div id="bg-canvas"></div>
+  <div id="glitch-overlay"></div>
+
+  <div id="app">
+    <header>
+      <h1>⚔ STORYFORGE</h1>
+      <p>AI-Powered Interactive Storytelling</p>
+    </header>
+
+    <!-- ── INTRO SCREEN ── -->
+    <section id="intro-screen">
+      <div class="intro-card">
+        <h2>Begin Your Story</h2>
+        <p class="sub">Describe your world and role. The AI will craft a living story around your choices.</p>
+        <div class="prompt-examples">
+          <span class="pill" onclick="setPrompt('Dark romance mafia story where I am the boss\'s rival')">🌹 Dark romance mafia</span>
+          <span class="pill" onclick="setPrompt('I am a new superhero in the Marvel universe')">⚡ Marvel superhero</span>
+          <span class="pill" onclick="setPrompt('I am an elephant trying to survive in a mysterious jungle')">🐘 Jungle survival</span>
+          <span class="pill" onclick="setPrompt('I am a detective in a cyberpunk noir mystery')">🕵️ Cyberpunk noir</span>
+          <span class="pill" onclick="setPrompt('I am a ship captain sailing through a fantasy ocean')">⚓ Fantasy voyage</span>
+        </div>
+        <textarea id="prompt-input" placeholder="e.g. 'I am a time-traveler stranded in ancient Rome…'" rows="3"></textarea>
+        <button class="btn-primary" id="start-btn" onclick="startStory()">✦ Forge Your Story</button>
+      </div>
+    </section>
+
+    <!-- ── STORY SCREEN ── -->
+    <section id="story-screen">
+
+      <!-- Scene background image -->
+      <div id="scene-bg" class="scene-bg"></div>
+      <div class="scene-bg-overlay"></div>
+
+      <!-- Top bar: title + controls -->
+      <div class="story-topbar">
+        <div class="story-title-wrap">
+          <span class="story-title-label">✦</span>
+          <span id="story-title" class="story-title-text"></span>
+        </div>
+        <div class="topbar-actions">
+          <button id="history-btn" class="btn-icon" onclick="toggleHistory()" title="Story History">
+            📜 History
+          </button>
+          <button class="btn-icon danger" onclick="resetStory()" title="New Story">✕ New</button>
+        </div>
+      </div>
+
+      <!-- History panel (slide-in) -->
+      <div id="history-panel" class="history-panel">
+        <div class="history-panel-header">
+          <span>📖 Story So Far</span>
+          <button class="close-history" onclick="toggleHistory()">✕</button>
+        </div>
+        <div id="history-list" class="history-list"></div>
+      </div>
+
+      <!-- Main story layout -->
+      <div class="story-layout">
+
+        <!-- Left: character portraits -->
+        <div id="portrait-rail" class="portrait-rail"></div>
+
+        <!-- Center: scene + choices -->
+        <div class="scene-center">
+          <div class="scene-card">
+            <div id="emotion-badge" class="emotion-badge" style="display:none"></div>
+            <p id="scene-text" class="scene-text"></p>
+          </div>
+          <div id="choices-area" class="choices-grid"></div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+  <script src="story.js"></script>
+  <script src="visuals.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
