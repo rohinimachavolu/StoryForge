@@ -9,7 +9,9 @@ const state = {
   sceneIndex:   0,
   historyOpen:  false,
   sceneImageUrl: '',
-  sceneImageRequestId: 0
+  sceneImageRequestId: 0,
+  voiceEnabled: typeof window !== 'undefined' && 'speechSynthesis' in window,
+  isSpeaking: false
 };
 
 const EMOTION_CONFIG = {
@@ -36,6 +38,56 @@ function showLoading() {
 
 function disableChoices(d) {
   document.querySelectorAll('.choice-btn').forEach(b => b.disabled = d);
+}
+
+function stopSceneVoice() {
+  if (!state.voiceEnabled) return;
+  window.speechSynthesis.cancel();
+  state.isSpeaking = false;
+  updateVoiceButton();
+}
+
+function updateVoiceButton() {
+  const btn = document.getElementById('voice-btn');
+  if (!btn) return;
+
+  if (!state.voiceEnabled) {
+    btn.disabled = true;
+    btn.textContent = '🔇 Voice N/A';
+    btn.title = 'Voice playback is not supported in this browser';
+    return;
+  }
+
+  btn.disabled = !state.currentScene?.scene;
+  btn.textContent = state.isSpeaking ? '⏹ Stop Voice' : '🔊 Listen';
+  btn.title = state.isSpeaking ? 'Stop scene narration' : 'Play scene narration';
+}
+
+function toggleSceneVoice() {
+  if (!state.voiceEnabled || !state.currentScene?.scene) return;
+
+  if (state.isSpeaking) {
+    stopSceneVoice();
+    return;
+  }
+
+  const utterance = new SpeechSynthesisUtterance(state.currentScene.scene);
+  utterance.rate = 0.96;
+  utterance.pitch = 1;
+  utterance.volume = 1;
+  utterance.onend = () => {
+    state.isSpeaking = false;
+    updateVoiceButton();
+  };
+  utterance.onerror = () => {
+    state.isSpeaking = false;
+    updateVoiceButton();
+  };
+
+  state.isSpeaking = true;
+  updateVoiceButton();
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
 }
 
 // ── Background scene image ─────────────────────────────────────────────────
@@ -172,6 +224,8 @@ function renderScene(data) {
 
   // scene text
   document.getElementById('scene-text').textContent = data.scene;
+  stopSceneVoice();
+  updateVoiceButton();
 
   // choices
   document.getElementById('choices-area').innerHTML = data.choices.map((c, i) => `
@@ -190,6 +244,7 @@ function renderScene(data) {
 
 function showError(msg) {
   document.getElementById('scene-text').textContent = `⚠ ${msg}`;
+  stopSceneVoice();
   const panel = document.getElementById('scene-art-panel');
   const status = document.getElementById('scene-art-status');
   panel.classList.remove('loading', 'loaded');
@@ -289,10 +344,12 @@ function resetStory() {
   if (state.sceneImageUrl && state.sceneImageUrl.startsWith('blob:')) {
     URL.revokeObjectURL(state.sceneImageUrl);
   }
+  stopSceneVoice();
   Object.assign(state, {
     prompt:'', title:'', characters:[], history:[],
     currentScene:null, sceneIndex:0, historyOpen:false,
-    sceneImageUrl:'', sceneImageRequestId:0
+    sceneImageUrl:'', sceneImageRequestId:0,
+    isSpeaking:false
   });
   document.getElementById('story-screen').classList.remove('active');
   document.getElementById('intro-screen').style.display = 'flex';
@@ -306,4 +363,7 @@ function resetStory() {
   document.getElementById('history-panel').classList.remove('open');
   document.getElementById('history-btn').classList.remove('active');
   updateBG('calm');
+  updateVoiceButton();
 }
+
+updateVoiceButton();

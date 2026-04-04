@@ -45,11 +45,11 @@ cd StoryForge
 
 Add your keys locally before running:
 
-- Groq API key in `story.js`
-- OpenAI API key in `server.py`
+- Groq API key in `config.js`
+- OpenAI API key in `config.js`
 
 Recommended next step:
-- move both keys into a local env/config setup before sharing or deploying
+- keep `config.js` local and untracked before sharing or deploying
 
 ### Run locally
 
@@ -69,6 +69,7 @@ storyforge/
 ├── story.js        # Groq scene generation + client-side image request helpers
 ├── visuals.js      # p5.js animated backgrounds per emotion
 ├── app.js          # State management and UI rendering
+├── config.js       # Local API keys for Groq and OpenAI
 ├── server.py       # Local image proxy for OpenAI image generation
 ├── generated_images/ # Saved prompts, payloads, generated images, and errors
 └── .gitignore
@@ -109,8 +110,8 @@ storyforge/
 
 Never commit your API keys. The current local setup uses:
 
-- a Groq key in `story.js`
-- an OpenAI key in `server.py`
+- a Groq key in `config.js`
+- an OpenAI key in `config.js`
 
 If you accidentally push either key, regenerate it immediately:
 
@@ -118,7 +119,7 @@ If you accidentally push either key, regenerate it immediately:
 - [OpenAI API keys](https://platform.openai.com/api-keys)
 
 Recommended improvement:
-- move both keys into environment variables or a local untracked config file
+- keep `config.js` untracked or move both keys into environment variables
 
 ## 🧪 Debugging Images
 

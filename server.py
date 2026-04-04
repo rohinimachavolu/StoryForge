@@ -10,10 +10,23 @@ import hashlib
 import base64
 
 PORT = 8000
-OPENAI_API_KEY = "YOUR_API_KEY"
 OPENAI_URL = "https://api.openai.com/v1/images/generations"
+MAX_MODERATION_RETRIES = 2
 GENERATED_DIR = Path(__file__).resolve().parent / "generated_images"
 GENERATED_DIR.mkdir(exist_ok=True)
+CONFIG_PATH = Path(__file__).resolve().parent / "config.js"
+
+def load_openai_api_key():
+    if not CONFIG_PATH.exists():
+        return "YOUR_OPENAI_API_KEY"
+
+    config_text = CONFIG_PATH.read_text(encoding="utf-8")
+    match = re.search(r"openAiApiKey:\s*['\"]([^'\"]+)['\"]", config_text)
+    if match:
+        return match.group(1)
+    return "YOUR_OPENAI_API_KEY"
+
+OPENAI_API_KEY = load_openai_api_key()
 
 def build_asset_prefix(prompt):
     digest = hashlib.sha1(prompt.encode("utf-8")).hexdigest()[:10]
@@ -63,6 +76,23 @@ def call_openai_image(payload):
     with urllib.request.urlopen(req) as response:
         return json.loads(response.read().decode("utf-8"))
 
+def build_retry_prompts(prompt):
+    sanitized = sanitize_prompt(prompt)
+    return [
+        prompt,
+        (
+            "simple low-detail cartoony portrait of one original fictional character, "
+            "head-and-shoulders framing, calm expression, minimal background, soft lighting, "
+            "safe original design, no logos, no copyrighted characters, no action scene, no combat. "
+            f"{sanitized}"
+        ).strip(),
+        (
+            "simple cartoony portrait of one original fictional character, "
+            "centered composition, calm or friendly expression, plain background, soft lighting, "
+            "safe original design, no action, no conflict, no weapons, no brand references."
+        )
+    ]
+
 class ProxyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
         # We also add CORS headers just in case
@@ -88,25 +118,32 @@ class ProxyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 asset_prefix.with_suffix(".prompt.txt").write_text(prompt, encoding="utf-8")
                 asset_prefix.with_suffix(".request.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
-                try:
-                    result = call_openai_image(payload)
-                except urllib.error.HTTPError as e:
-                    error_body = e.read()
-                    is_moderation = e.code == 400 and b"moderation_blocked" in error_body
-                    if not is_moderation:
-                        raise urllib.error.HTTPError(e.url, e.code, e.reason, e.headers, None)
+                retry_prompts = build_retry_prompts(prompt)
+                result = None
+                last_error = None
 
-                    safe_prompt = sanitize_prompt(prompt)
-                    fallback_prompt = (
-                        "cartoony head-and-shoulders portrait of an original fictional hero, "
-                        "friendly animated style, calm heroic pose, gentle confident expression, simple abstract background, "
-                        "soft dramatic lighting, colorful illustration, no logos, no copyrighted characters, no action scene, no combat. "
-                        f"{safe_prompt}"
-                    ).strip()
-                    fallback_payload = build_payload(fallback_prompt, incoming)
-                    asset_prefix.with_suffix(".fallback.prompt.txt").write_text(fallback_prompt, encoding="utf-8")
-                    asset_prefix.with_suffix(".fallback.request.json").write_text(json.dumps(fallback_payload, indent=2), encoding="utf-8")
-                    result = call_openai_image(fallback_payload)
+                for attempt_index, attempt_prompt in enumerate(retry_prompts[:MAX_MODERATION_RETRIES + 1]):
+                    current_payload = build_payload(attempt_prompt, incoming)
+                    if attempt_index == 0:
+                        asset_prefix.with_suffix(".prompt.txt").write_text(attempt_prompt, encoding="utf-8")
+                        asset_prefix.with_suffix(".request.json").write_text(json.dumps(current_payload, indent=2), encoding="utf-8")
+                    else:
+                        asset_prefix.with_suffix(f".retry{attempt_index}.prompt.txt").write_text(attempt_prompt, encoding="utf-8")
+                        asset_prefix.with_suffix(f".retry{attempt_index}.request.json").write_text(json.dumps(current_payload, indent=2), encoding="utf-8")
+
+                    try:
+                        result = call_openai_image(current_payload)
+                        break
+                    except urllib.error.HTTPError as e:
+                        error_body = e.read()
+                        is_moderation = e.code == 400 and b"moderation_blocked" in error_body
+                        if not is_moderation or attempt_index >= MAX_MODERATION_RETRIES:
+                            raise urllib.error.HTTPError(e.url, e.code, e.reason, e.headers, None)
+                        last_error = error_body
+                        continue
+
+                if result is None and last_error is not None:
+                    raise ValueError(f"Image generation failed after {MAX_MODERATION_RETRIES} retries.")
 
                 image_data = (result.get("data") or [{}])[0]
                 b64 = image_data.get("b64_json")
