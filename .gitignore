@@ -1,4 +1,10 @@
-# Secrets and local config
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+
+# Secrets and local config (never commit real keys)
 .env
 .env.local
 .env.*.local

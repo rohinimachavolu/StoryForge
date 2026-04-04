@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Storyforge</title>
+  <title>Storyforge — D&amp;D Adventures</title>
   <link rel="stylesheet" href="style.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
 </head>
@@ -14,65 +14,168 @@
   <div id="app">
     <header>
       <h1>⚔ STORYFORGE</h1>
-      <p>AI-Powered Interactive Storytelling</p>
+      <p>AI Dungeon Master — solo D&amp;D-style adventures</p>
     </header>
 
-    <!-- ── INTRO SCREEN ── -->
+    <!-- ── INTRO: book landing (world + agency + premise) ── -->
     <section id="intro-screen">
-      <div class="intro-card">
-        <h2>Begin Your Story</h2>
-        <p class="sub">Describe your world and role. The AI will craft a living story around your choices.</p>
-        <div class="prompt-examples">
-          <span class="pill" onclick="setPrompt('Dark romance mafia story where I am the boss\'s rival')">🌹 Dark romance mafia</span>
-          <span class="pill" onclick="setPrompt('I am a new superhero in the Marvel universe')">⚡ Marvel superhero</span>
-          <span class="pill" onclick="setPrompt('I am an elephant trying to survive in a mysterious jungle')">🐘 Jungle survival</span>
-          <span class="pill" onclick="setPrompt('I am a detective in a cyberpunk noir mystery')">🕵️ Cyberpunk noir</span>
-          <span class="pill" onclick="setPrompt('I am a ship captain sailing through a fantasy ocean')">⚓ Fantasy voyage</span>
+      <div class="book-setup">
+        <div class="book-setup-header" aria-hidden="true">
+          <span class="book-setup-header-orn">×</span>
+          <div class="book-setup-header-center">
+            <span class="book-setup-brand">STORYFORGE</span>
+            <span class="book-setup-tagline">Choose your world. Shape your fate.</span>
+          </div>
+          <span class="book-setup-header-orn">×</span>
         </div>
-        <textarea id="prompt-input" placeholder="e.g. 'I am a time-traveler stranded in ancient Rome…'" rows="3"></textarea>
-        <button class="btn-primary" id="start-btn" onclick="startStory()">✦ Forge Your Story</button>
+        <div class="book-setup-pages">
+          <div class="book-page book-page-left">
+            <div class="book-section">
+              <h2 class="book-section-title"><span class="book-rom">I.</span> Choose your world</h2>
+              <div class="book-world-grid book-world-grid-three">
+                <button type="button" class="book-world-card" id="world-dystopian" data-theme="dystopian" onclick="selectBookWorld('dystopian')">
+                  <span class="book-world-icon" aria-hidden="true">🏙</span>
+                  <span class="book-world-name">Dystopian</span>
+                  <span class="book-world-desc">A crumbling society. Surveillance. Resistance.</span>
+                </button>
+                <button type="button" class="book-world-card" id="world-victorian" data-theme="victorian" onclick="selectBookWorld('victorian')">
+                  <span class="book-world-icon" aria-hidden="true">🕯</span>
+                  <span class="book-world-name">Victorian era</span>
+                  <span class="book-world-desc">Gas lamps, fog, class tension, and dark secrets.</span>
+                </button>
+                <button type="button" class="book-world-card book-world-card-veilwild" id="world-veilwild" data-theme="veilwild" onclick="selectBookWorld('veilwild')">
+                  <span class="book-world-icon" aria-hidden="true">🌿</span>
+                  <span class="book-world-name">Veilwild</span>
+                  <span class="book-world-desc">Mythic borderlands — strange wilds, old bargains, living weather. Your premise shapes everything.</span>
+                </button>
+              </div>
+            </div>
+            <div class="book-section">
+              <h2 class="book-section-title"><span class="book-rom">II.</span> Your agency</h2>
+              <div class="book-agency-row">
+                <button type="button" class="book-agency-btn" id="agency-witness" data-agency="witness" onclick="selectAgency('witness')">
+                  <span class="book-agency-icon" aria-hidden="true">👁</span>
+                  <span class="book-agency-label">Witness</span>
+                </button>
+                <button type="button" class="book-agency-btn" id="agency-player" data-agency="player" onclick="selectAgency('player')">
+                  <span class="book-agency-icon" aria-hidden="true">⚔</span>
+                  <span class="book-agency-label">Player</span>
+                </button>
+                <button type="button" class="book-agency-btn" id="agency-author" data-agency="author" onclick="selectAgency('author')">
+                  <span class="book-agency-icon" aria-hidden="true">✒</span>
+                  <span class="book-agency-label">Author</span>
+                </button>
+              </div>
+              <p class="book-agency-caption">Type what you do. One rewrite per chapter.</p>
+            </div>
+          </div>
+          <div class="book-spine" aria-hidden="true"></div>
+          <div class="book-page book-page-right">
+            <div class="book-section">
+              <h2 class="book-section-title"><span class="book-rom">III.</span> Your story begins</h2>
+              <p class="book-premise-hint">Select a world to see story ideas →</p>
+              <div class="prompt-examples book-prompt-pills">
+                <span class="pill" onclick="setPrompt('D&amp;D: I am a rogue exploring a cursed dungeon beneath an abandoned wizard tower with two companions')">🎲 Cursed dungeon</span>
+                <span class="pill" onclick="setPrompt('D&amp;D: I am a ship captain on a fantasy ocean — sea monsters, rival crews, and ancient magic beneath the waves')">⚓ Fantasy voyage</span>
+                <span class="pill" onclick="setPrompt('D&amp;D: I am a cleric in a frontier town where townsfolk vanish after dark; the innkeeper begs for help')">🍺 Frontier mystery</span>
+                <span class="pill" onclick="setPrompt('D&amp;D: I am a warlock hired to steal a relic from a dragon lair before a rival faction gets it')">🐉 Dragon heist</span>
+                <span class="pill" onclick="setPrompt('D&amp;D: I am a bard caught between noble houses at a masked ball where someone plans assassination')">🎭 Court intrigue</span>
+              </div>
+              <h3 class="book-inline-heading">How should it read?</h3>
+              <p class="book-prose-intro">Same story — different vocabulary. Pick before you forge.</p>
+              <div class="book-prose-row" role="group" aria-label="Prose style">
+                <button type="button" class="book-prose-btn" data-prose="literary" id="prose-literary" onclick="selectProseStyle('literary')">
+                  <span class="book-prose-name">Literary</span>
+                  <span class="book-prose-desc">Rich D&amp;D table tone — sensory, a little elevated.</span>
+                </button>
+                <button type="button" class="book-prose-btn" data-prose="plain" id="prose-plain" onclick="selectProseStyle('plain')">
+                  <span class="book-prose-name">Plain</span>
+                  <span class="book-prose-desc">Simple, direct words — short sentences, easy to read.</span>
+                </button>
+              </div>
+              <label class="visually-hidden" for="prompt-input">Story premise</label>
+              <textarea id="prompt-input" placeholder="Describe your premise… e.g. 'D&amp;D: I am a dwarven fighter escorting a caravan through giant territory…'" rows="5"></textarea>
+              <button type="button" class="btn-book-forge" id="forge-story-btn" onclick="goToAgencySetup()"><span class="btn-book-forge-icon" aria-hidden="true">✦</span> Forge your story</button>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- ── STORY SCREEN ── -->
     <section id="story-screen">
 
-      <!-- Scene background image -->
       <div id="scene-bg" class="scene-bg"></div>
       <div class="scene-bg-overlay"></div>
 
-      <!-- Top bar: title + controls -->
       <div class="story-topbar">
         <div class="story-title-wrap">
           <span class="story-title-label">✦</span>
           <span id="story-title" class="story-title-text"></span>
         </div>
+        <div id="chapter-chip" class="chapter-chip" style="display:none"></div>
+        <div id="rpg-stats-bar" class="rpg-stats-bar" style="display:none" aria-label="Character stats">
+          <span class="rpg-stat">❤ <span id="stat-hp">20</span>/<span id="stat-maxhp">20</span></span>
+          <span class="rpg-stat">Lv <span id="stat-level">1</span></span>
+          <span class="rpg-stat">✧ XP <span id="stat-xp">0</span></span>
+          <span class="rpg-stat">🪙 <span id="stat-coins">0</span></span>
+        </div>
         <div class="topbar-actions">
-          <button id="history-btn" class="btn-icon" onclick="toggleHistory()" title="Story History">
-            📜 History
+          <button type="button" id="read-aloud-btn" class="btn-icon" title="Read this scene aloud (varied voices)">🔊 Read</button>
+          <button type="button" id="stop-speech-btn" class="btn-icon" title="Stop speech" style="display:none">⏹ Stop</button>
+          <button type="button" id="ambient-toggle-btn" class="btn-icon ambient-on" title="Background mood music">🎵</button>
+          <button type="button" id="next-chapter-btn" class="btn-icon" onclick="advanceChapter()" title="Next chapter (1–10)" style="display:none">
+            Next chapter
           </button>
-          <button class="btn-icon danger" onclick="resetStory()" title="New Story">✕ New</button>
+          <button type="button" id="history-btn" class="btn-icon" onclick="toggleHistory()" title="Adventure log">
+            📜 Log
+          </button>
+          <button type="button" class="btn-icon danger" onclick="resetStory()" title="New story">✕ New</button>
         </div>
       </div>
 
-      <!-- History panel (slide-in) -->
+      <div id="chapter-progress-row" class="chapter-progress-row" style="display:none">
+        <div class="chapter-progress-meta">
+          <span id="chapter-progress-label">Chapter 1 / 10</span>
+        </div>
+        <div class="chapter-progress-track" role="progressbar" aria-valuemin="1" aria-valuemax="10" aria-valuenow="1" id="chapter-progress-bar">
+          <div id="chapter-progress-fill" class="chapter-progress-fill"></div>
+        </div>
+      </div>
+
       <div id="history-panel" class="history-panel">
         <div class="history-panel-header">
-          <span>📖 Story So Far</span>
-          <button class="close-history" onclick="toggleHistory()">✕</button>
+          <span>📖 Adventure Log</span>
+          <button type="button" class="close-history" onclick="toggleHistory()">✕</button>
         </div>
         <div id="history-list" class="history-list"></div>
       </div>
 
-      <!-- Main story layout -->
       <div class="story-layout">
 
-        <!-- Left: character portraits -->
+        <div class="story-side-column">
+        <aside id="story-arc-aside" class="story-arc-aside" aria-label="Story arc chapters">
+          <div class="story-arc-header">
+            <span class="story-arc-icon" aria-hidden="true">📖</span>
+            <span>Story arc</span>
+          </div>
+          <ul id="story-arc-list" class="story-arc-list"></ul>
+        </aside>
+        <aside id="author-tools-aside" class="author-tools-aside" hidden aria-label="Author tools">
+          <div class="author-tools-header">
+            <span class="author-tools-icon" aria-hidden="true">✒</span>
+            <span>Author moves</span>
+          </div>
+          <p class="author-tools-hint">Fires the next scene with your editorial command.</p>
+          <div id="author-tools-list" class="author-tools-list"></div>
+        </aside>
+        </div>
+
         <div id="portrait-rail" class="portrait-rail"></div>
 
-        <!-- Center: scene + choices -->
         <div class="scene-center">
           <div class="scene-card">
+            <div id="api-notice" class="api-notice" style="display:none" role="status" aria-live="polite"></div>
             <div id="emotion-badge" class="emotion-badge" style="display:none"></div>
             <p id="scene-text" class="scene-text"></p>
           </div>
@@ -81,10 +184,46 @@
 
       </div>
     </section>
+
+    <!-- Chapter completion rewards -->
+    <div id="rewards-modal" class="rewards-modal-overlay" hidden>
+      <button type="button" class="rewards-modal-scrim" aria-label="Close"></button>
+      <div class="rewards-modal-card" role="dialog" aria-modal="true" aria-labelledby="rewards-modal-title">
+        <h2 id="rewards-modal-title" class="rewards-modal-title">Chapter rewards</h2>
+        <p id="rewards-modal-summary" class="rewards-modal-summary"></p>
+        <ul class="rewards-modal-lines">
+          <li id="rewards-modal-hp"></li>
+          <li id="rewards-modal-xp"></li>
+          <li id="rewards-modal-coins"></li>
+        </ul>
+        <button type="button" class="btn-rewards-ok" id="rewards-modal-ok">Continue</button>
+      </div>
+    </div>
+
+    <!-- Chapter themes modal (Story arc sidebar) -->
+    <div id="beats-modal" class="beats-modal-overlay" hidden>
+      <button type="button" class="beats-modal-scrim" aria-label="Close"></button>
+      <div class="beats-modal-card" role="dialog" aria-modal="true" aria-labelledby="beats-modal-heading">
+        <button type="button" class="beats-modal-close" id="beats-modal-close" aria-label="Close">✕</button>
+        <h2 id="beats-modal-heading" class="beats-modal-title">Chapter</h2>
+        <p id="beats-modal-sub" class="beats-modal-sub">After the first scene of each chapter, the AI suggests thematic threads here — drag to reorder so the model pays them off in your order. You can edit labels anytime. Open from the Story arc sidebar.</p>
+        <label class="beats-field-label" for="beats-chapter-title-input">Chapter title <span class="beats-optional">(sidebar)</span></label>
+        <input type="text" id="beats-chapter-title-input" class="beats-chapter-title-input" placeholder="e.g. Life inside the walls" autocomplete="off"/>
+        <ol id="beats-modal-list" class="beats-modal-list"></ol>
+        <button type="button" class="btn-add-beat" id="add-beat-btn">+ Add theme</button>
+        <label class="beats-field-label" for="beats-narration-note">Narration steer</label>
+        <textarea id="beats-narration-note" class="beats-narration-textarea" rows="3" placeholder="Optional: tone, must-happen events, things to avoid…"></textarea>
+        <div class="beats-modal-actions">
+          <button type="button" class="btn-set-beats" id="beats-save-btn">✓ Save themes</button>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <script src="story.js"></script>
+  <!-- config.js: copy config.example.js, add your key (gitignored). If missing, python serve.py serves this URL from .env -->
+  <script>window.__STORYFORGE_CONFIG_JS_FAILED__ = false;</script>
+  <script src="config.js" onerror="window.__STORYFORGE_CONFIG_JS_FAILED__=true"></script>
   <script src="visuals.js"></script>
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>
