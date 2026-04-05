@@ -1,0 +1,7 @@
+{
+  "name": "storyforge",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/write-config.js"
+  }
+}
