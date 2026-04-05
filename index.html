@@ -73,13 +73,16 @@
           <div class="book-page book-page-right">
             <div class="book-section">
               <h2 class="book-section-title"><span class="book-rom">III.</span> Your story begins</h2>
-              <p class="book-premise-hint">Select a world to see story ideas →</p>
-              <div class="prompt-examples book-prompt-pills">
-                <span class="pill" onclick="setPrompt('D&amp;D: I am a rogue exploring a cursed dungeon beneath an abandoned wizard tower with two companions')">🎲 Cursed dungeon</span>
-                <span class="pill" onclick="setPrompt('D&amp;D: I am a ship captain on a fantasy ocean — sea monsters, rival crews, and ancient magic beneath the waves')">⚓ Fantasy voyage</span>
-                <span class="pill" onclick="setPrompt('D&amp;D: I am a cleric in a frontier town where townsfolk vanish after dark; the innkeeper begs for help')">🍺 Frontier mystery</span>
-                <span class="pill" onclick="setPrompt('D&amp;D: I am a warlock hired to steal a relic from a dragon lair before a rival faction gets it')">🐉 Dragon heist</span>
-                <span class="pill" onclick="setPrompt('D&amp;D: I am a bard caught between noble houses at a masked ball where someone plans assassination')">🎭 Court intrigue</span>
+              <p class="book-premise-hint">Pick one or more tags to build a premise →</p>
+              <div class="prompt-examples book-prompt-pills" id="story-tags">
+                <span class="pill pill-tag" data-tag="cursed-dungeon" onclick="toggleStoryTag(this)">🎲 Cursed dungeon</span>
+                <span class="pill pill-tag" data-tag="fantasy-voyage" onclick="toggleStoryTag(this)">⚓ Fantasy voyage</span>
+                <span class="pill pill-tag" data-tag="frontier-mystery" onclick="toggleStoryTag(this)">🍺 Frontier mystery</span>
+                <span class="pill pill-tag" data-tag="dragon-heist" onclick="toggleStoryTag(this)">🐉 Dragon heist</span>
+                <span class="pill pill-tag" data-tag="court-intrigue" onclick="toggleStoryTag(this)">🎭 Court intrigue</span>
+                <span class="pill pill-tag" data-tag="sci-fi" onclick="toggleStoryTag(this)">🚀 Sci-fi</span>
+                <span class="pill pill-tag" data-tag="dystopian-world" onclick="toggleStoryTag(this)">🏚 Dystopian world</span>
+                <span class="pill pill-tag" data-tag="apocalypse" onclick="toggleStoryTag(this)">☢ Apocalypse</span>
               </div>
               <h3 class="book-inline-heading">How should it read?</h3>
               <p class="book-prose-intro">Same story — different vocabulary. Pick before you forge.</p>

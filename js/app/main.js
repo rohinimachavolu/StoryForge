@@ -18,7 +18,8 @@ import {
   selectNarrationTheme,
   selectProseStyle,
   setPrompt,
-  syncBookLandingUi
+  syncBookLandingUi,
+  toggleStoryTag
 } from './setup-wizard.js';
 import { resetStory } from './reset.js';
 import { toggleHistory } from './history.js';
@@ -58,7 +59,7 @@ export function initApp() {
   document.getElementById('read-aloud-btn')?.addEventListener('click', () => {
     void activateAmbientOnUserGesture();
     if (state.currentScene && state.currentScene.scene) {
-      void speakScene(state.currentScene.scene, state.characters);
+      void speakScene(state.currentScene, state.characters);
     }
   });
   document.getElementById('stop-speech-btn')?.addEventListener('click', () => stopSpeech());
@@ -92,6 +93,7 @@ export function initApp() {
     goBackToAgency,
     selectNarrationTheme,
     selectProseStyle,
+    toggleStoryTag,
     startChapterOne,
     advanceChapter,
     resetStory,

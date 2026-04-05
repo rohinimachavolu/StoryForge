@@ -83,15 +83,22 @@ Second person, sensory stakes, memorable NPCs.
 ${chapterModeBlock}
 **Scene output (critical):** The JSON \`"scene"\` value must be **only prose the player reads** — second person, in-world. **Never** paste instructions, rubric lines, or labels from this prompt (e.g. never start with "Dialogue-heavy:" or "Second person;" as meta text).
 
-**Choices:** Three strings. **I** ~22–38 words, vivid fork. **II–III** ~8–14 words each, include quoted speech + tiny stakes. Ban empty verbs (Investigate, Wait, Look around…) unless totally remade. Every prior pick should ripple. Finale scene: still output three short choice strings for valid JSON.
+**Choices:** Three strings that present genuine **dilemmas** — each should cost something, reveal something, or commit the player to a relationship/stance they can't easily undo. No safe "observe" options; at least one choice should be emotionally risky. **I** ~22–38 words, vivid fork with clear stakes and trade-offs. **II–III** ~8–14 words each, include quoted speech + consequence hint. Ban empty verbs (Investigate, Wait, Look around…). Every prior pick should ripple into these options — choices must feel like they grow from what already happened. Finale scene: still output three short choice strings for valid JSON.
 No chapter_label in JSON. Match app chapter numbers if you mention them.
 
 **Read-aloud cast:** Each character MUST include \`"gender"\`: \`"female"\` | \`"male"\` | \`"neutral"\` (presentation in the fiction), and \`"voiceProfile"\`: exactly one of \`narrator\`, \`woman\`, \`woman_alt\`, \`child\`, \`warrior\`, \`man\`, \`elder\`. **Align voiceProfile with gender** (female NPCs → \`woman\` or \`woman_alt\`; male → \`man\`, \`warrior\`, or \`elder\`). Two women in the scene → one \`woman\`, one \`woman_alt\`. \`child\` for kids. \`narrator\` for "You" only.
+
+**speechSegments (required for read-aloud):** Break the \`"scene"\` text into ordered segments for TTS. Each segment is \`{ "type": "narr" | "dlg", "text": "…" }\`. Dialogue segments **must** also include \`"speaker": "CharacterName"\` and \`"voiceProfile"\` (one of \`woman\`, \`woman_alt\`, \`child\`, \`warrior\`, \`man\`, \`elder\`). Pick the voiceProfile that matches the speaker's gender/age — female → \`woman\` or \`woman_alt\`, male → \`man\`/\`warrior\`/\`elder\`, child → \`child\`. Two different women in the same scene should use \`woman\` and \`woman_alt\`. Every word of \`"scene"\` must appear in exactly one segment. Narration = type \`"narr"\`; any quoted speech by a named character = type \`"dlg"\` with just the spoken words (no quotes).
 ${scene1ThemesInstruction}
 Respond with **only** valid JSON, no markdown:
 {
   "title": "3-6 words; repeat after first response",
   "scene": "Only in-world prose the player reads (use Speaker — quoted speech when rules require dialogue)",
+  "speechSegments": [
+    { "type": "narr", "text": "Narration text here…" },
+    { "type": "dlg", "speaker": "NPC", "voiceProfile": "woman", "text": "What the character says" },
+    { "type": "narr", "text": "More narration…" }
+  ],
   "emotion": "romance | happy | tension | danger | calm | adventure",
   "location": "wide environment for image, no people, match theme",
   "characters": [

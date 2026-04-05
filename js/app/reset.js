@@ -1,7 +1,7 @@
 import { TOTAL_CHAPTERS } from '../story/constants.js';
 import { stopAmbient } from './ambient-audio.js';
 import { renderStoryArcSidebar } from './sidebar.js';
-import { stopSpeech } from './story-speech.js';
+import { clearVoiceAssignments, stopSpeech } from './story-speech.js';
 import { state } from './state.js';
 
 function updateBG(emotion) {
@@ -9,6 +9,7 @@ function updateBG(emotion) {
 }
 
 export function resetStory() {
+  clearVoiceAssignments();
   Object.assign(state, {
     prompt: '',
     title: '',

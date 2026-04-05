@@ -6,6 +6,13 @@ let speaking = false;
 let onSpeakingChange = null;
 let speakToken = 0;
 
+/** Persistent speaker → SpeechSynthesisVoice map; survives across scenes, cleared on story reset. */
+const voiceAssignments = new Map();
+
+export function clearVoiceAssignments() {
+  voiceAssignments.clear();
+}
+
 export function setOnSpeakingChange(fn) {
   onSpeakingChange = typeof fn === 'function' ? fn : null;
 }
@@ -29,28 +36,32 @@ function voiceKey(v) {
   return `${v.name} ${v.voiceURI || ''}`.toLowerCase();
 }
 
-/** Prefer British English (RP-adjacent) voices — Bridgerton-style read-aloud, not random regional accents. */
-function selectBridgertonVoicePool(all) {
+const _normLang = v => (v.lang || '').toLowerCase().replace('_', '-');
+
+/** All usable English voices (excludes en-IN to avoid strong accent mismatch). */
+function getAllEnglishVoices(all) {
   if (!all.length) return all;
-  const normLang = v => (v.lang || '').toLowerCase().replace('_', '-');
+  const en = all.filter(v => {
+    const l = _normLang(v);
+    return l.startsWith('en') && !l.startsWith('en-in');
+  });
+  return en.length ? en : all;
+}
+
+/** Best British / RP-adjacent voice for the narrator. Falls back gracefully. */
+function pickNarratorVoice(all) {
   const gb = all.filter(v => {
-    const l = normLang(v);
+    const l = _normLang(v);
     return l === 'en-gb' || l.startsWith('en-gb-');
   });
-  if (gb.length >= 1) return gb;
+  if (gb.length) return gb;
   const ukMeta = all.filter(v =>
     /united kingdom|british english|\(uk\)|uk english|england|english \(united kingdom\)|microsoft sonia|microsoft ryan|microsoft thomas|microsoft libby|microsoft maisie|microsoft ethan|microsoft alfie|microsoft ollie/i.test(
       voiceKey(v)
     )
   );
   if (ukMeta.length) return ukMeta;
-  const au = all.filter(v => normLang(v).startsWith('en-au'));
-  if (au.length) return au;
-  const en = all.filter(v => {
-    const l = normLang(v);
-    return l.startsWith('en') && !l.startsWith('en-in');
-  });
-  return en.length ? en : all;
+  return all;
 }
 
 function isClearlyFemaleVoice(v) {
@@ -198,6 +209,31 @@ function pickVoiceForProfile(profile, speaker, voices) {
   }
 }
 
+function speakerKey(speaker) {
+  return speaker ? speaker.toLowerCase().trim().replace(/\s+/g, ' ') : '__narrator__';
+}
+
+/**
+ * Return the cached voice for a speaker, or pick + cache one.
+ * Tries to avoid reusing a voice already assigned to another speaker
+ * so each character sounds distinct.
+ */
+function getOrAssignVoice(speaker, profile, voices) {
+  const key = speakerKey(speaker);
+  if (voiceAssignments.has(key)) return voiceAssignments.get(key);
+
+  const usedURIs = new Set();
+  for (const v of voiceAssignments.values()) {
+    if (v && v.voiceURI) usedURIs.add(v.voiceURI);
+  }
+  const available = voices.filter(v => !usedURIs.has(v.voiceURI));
+  const pool = available.length ? available : voices;
+
+  const voice = pickVoiceForProfile(profile, speaker || 'narrator', pool);
+  if (voice) voiceAssignments.set(key, voice);
+  return voice;
+}
+
 function voiceSoundsMale(v, profile) {
   if (!v || profile === 'narrator') return false;
   if (profile === 'woman' || profile === 'woman_alt' || profile === 'child') {
@@ -208,51 +244,54 @@ function voiceSoundsMale(v, profile) {
 
 function applyProsody(utt, profile, extraPitch = 0) {
   let base = 1;
-  let rate = 0.98;
+  let rate = 0.95;
   switch (profile) {
     case 'child':
-      base = 1.22;
-      rate = 1.05;
+      base = 1.45;
+      rate = 1.12;
       break;
     case 'warrior':
-      base = 0.88;
-      rate = 0.94;
+      base = 0.72;
+      rate = 0.88;
       break;
     case 'elder':
-      base = 0.9;
-      rate = 0.86;
+      base = 0.78;
+      rate = 0.78;
       break;
     case 'woman':
-      base = 1.1;
-      rate = 1;
+      base = 1.25;
+      rate = 1.02;
       break;
     case 'woman_alt':
-      base = 1.14;
-      rate = 0.98;
+      base = 1.35;
+      rate = 0.96;
       break;
     case 'man':
-      base = 0.94;
-      rate = 0.98;
+      base = 0.82;
+      rate = 0.94;
       break;
     case 'narrator':
     default:
       base = 1;
-      rate = 0.98;
+      rate = 0.95;
   }
   utt.pitch = Math.min(2, Math.max(0.5, base + extraPitch));
   utt.rate = Math.min(1.35, Math.max(0.65, rate));
 }
 
 /**
- * Slightly slower, measured delivery. **Must** keep `lang` aligned with `voice` —
- * forcing en-GB on an en-US voice silences speech on Chrome/Edge.
+ * Keep `lang` aligned with `voice` — forcing en-GB on an en-US voice
+ * silences speech on Chrome/Edge. Light dampening only for narrator;
+ * character voices keep their full prosody separation.
  */
-function applyBridgertonDelivery(utt, voice) {
+function applyBridgertonDelivery(utt, voice, isNarrator) {
   if (voice && voice.lang) {
     utt.lang = voice.lang;
   }
-  utt.rate = Math.max(0.72, Math.min(1.08, utt.rate * 0.92));
-  utt.pitch = Math.min(1.85, Math.max(0.82, utt.pitch * 0.98));
+  if (isNarrator) {
+    utt.rate = Math.max(0.72, Math.min(1.08, utt.rate * 0.92));
+    utt.pitch = Math.min(1.85, Math.max(0.82, utt.pitch * 0.98));
+  }
 }
 
 function waitForVoices(timeoutMs = 2800) {
@@ -287,17 +326,56 @@ export function isSpeaking() {
   return speaking;
 }
 
-export async function speakScene(sceneText, characters) {
-  if (typeof speechSynthesis === 'undefined' || !sceneText) return;
+/**
+ * Normalize model-provided speechSegments into the same shape
+ * that getSceneSpeechSegments returns.
+ */
+function normalizeModelSegments(raw) {
+  if (!Array.isArray(raw) || !raw.length) return null;
+  const out = [];
+  for (const s of raw) {
+    if (!s || !s.text) continue;
+    const t = String(s.text).trim();
+    if (!t) continue;
+    if (s.type === 'dlg' && s.speaker) {
+      const seg = { type: 'dlg', speaker: String(s.speaker).trim(), text: t };
+      if (s.voiceProfile) seg.voiceProfile = normalizeProfile(s.voiceProfile);
+      out.push(seg);
+    } else {
+      out.push({ type: 'narr', text: t });
+    }
+  }
+  return out.length ? out : null;
+}
+
+/**
+ * @param {string|object} sceneOrData  raw scene text OR full scene data object
+ *        (with .scene, .speechSegments, etc.)
+ * @param {Array} characters  character list from state
+ */
+export async function speakScene(sceneOrData, characters) {
+  if (typeof speechSynthesis === 'undefined') return;
+
+  const isObj = sceneOrData && typeof sceneOrData === 'object' && !Array.isArray(sceneOrData);
+  const sceneText = isObj ? sceneOrData.scene : sceneOrData;
+  const modelSegs = isObj ? sceneOrData.speechSegments : undefined;
+
+  if (!sceneText) return;
   stopSpeech();
   const token = speakToken;
   await waitForVoices();
   if (typeof speechSynthesis !== 'undefined') speechSynthesis.getVoices();
   if (token !== speakToken) return;
   const rawVoices = speechSynthesis.getVoices();
-  const voices = selectBridgertonVoicePool(rawVoices);
-  const segments = getSceneSpeechSegments(sceneText);
+  const allEnglish = getAllEnglishVoices(rawVoices);
+  const narratorPool = pickNarratorVoice(allEnglish);
+
+  const segments = normalizeModelSegments(modelSegs) || getSceneSpeechSegments(sceneText);
   if (!segments.length) return;
+
+  const source = modelSegs && normalizeModelSegments(modelSegs) ? 'model' : 'regex';
+  console.log(`[TTS] source: ${source} | segments: ${segments.length}`,
+    `| voices: ${allEnglish.length} (narrator pool: ${narratorPool.length})`);
 
   let i = 0;
   notifySpeaking(true);
@@ -309,22 +387,30 @@ export async function speakScene(sceneText, characters) {
       return;
     }
     const seg = segments[i++];
+    const isNarr = seg.type !== 'dlg';
     const utt = new SpeechSynthesisUtterance(seg.text);
-    const profile =
-      seg.type === 'dlg' ? profileForSpeaker(seg.speaker, characters) : 'narrator';
-    const v =
-      seg.type === 'dlg'
-        ? pickVoiceForProfile(profile, seg.speaker || 'npc', voices)
-        : pickVoiceForProfile('narrator', 'narrator', voices);
+    const profile = isNarr
+      ? 'narrator'
+      : (seg.voiceProfile && seg.voiceProfile !== 'narrator')
+        ? seg.voiceProfile
+        : profileForSpeaker(seg.speaker, characters);
+    const v = isNarr
+      ? getOrAssignVoice(null, 'narrator', narratorPool)
+      : getOrAssignVoice(seg.speaker, profile, allEnglish);
 
     let extraPitch = 0;
-    if (v && seg.type === 'dlg' && voiceSoundsMale(v, profile)) {
-      extraPitch = profile === 'child' ? 0.18 : 0.22;
+    if (v && !isNarr && voiceSoundsMale(v, profile)) {
+      extraPitch = profile === 'child' ? 0.22 : 0.28;
     }
 
     applyProsody(utt, profile, extraPitch);
     if (v) utt.voice = v;
-    applyBridgertonDelivery(utt, v);
+    applyBridgertonDelivery(utt, v, isNarr);
+
+    console.log('[TTS]', isNarr ? 'NARR' : `DLG [${seg.speaker}]`,
+      '→ profile:', profile, '| voice:', v?.name || '(none)',
+      '| pitch:', utt.pitch.toFixed(2), '| rate:', utt.rate.toFixed(2));
+
     utt.onend = speakNext;
     utt.onerror = speakNext;
     speechSynthesis.speak(utt);
