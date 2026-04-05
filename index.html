@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Storyforge</title>
   <link rel="stylesheet" href="style.css"/>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
 </head>
 <body>
   <div id="bg-canvas"></div>
@@ -17,45 +16,32 @@
       <p>AI-Powered Interactive Storytelling</p>
     </header>
 
-    <!-- ── INTRO SCREEN ── -->
-    <section id="intro-screen">
-      <div class="intro-card">
-        <h2>Begin Your Story</h2>
-        <p class="sub">Describe your world and role. The AI will craft a living story around your choices.</p>
-        <div class="prompt-examples">
-          <span class="pill" onclick="setPrompt('Dark romance mafia story where I am the boss\'s rival')">🌹 Dark romance mafia</span>
-          <span class="pill" onclick="setPrompt('I am a new superhero in the Marvel universe')">⚡ Marvel superhero</span>
-          <span class="pill" onclick="setPrompt('I am an elephant trying to survive in a mysterious jungle')">🐘 Jungle survival</span>
-          <span class="pill" onclick="setPrompt('I am a detective in a cyberpunk noir mystery')">🕵️ Cyberpunk noir</span>
-          <span class="pill" onclick="setPrompt('I am a ship captain sailing through a fantasy ocean')">⚓ Fantasy voyage</span>
-        </div>
-        <textarea id="prompt-input" placeholder="e.g. 'I am a time-traveler stranded in ancient Rome…'" rows="3"></textarea>
-        <button class="btn-primary" id="start-btn" onclick="startStory()">✦ Forge Your Story</button>
-      </div>
-    </section>
+    <!-- ── INTRO SCREEN — book animation renders here ── -->
+    <section id="intro-screen"></section>
 
     <!-- ── STORY SCREEN ── -->
     <section id="story-screen">
 
-      <!-- Scene background image -->
+      <!-- Chapter sidebar -->
+      <div id="chapter-sidebar" style="display:none"></div>
+
+      <!-- Scene background -->
       <div id="scene-bg" class="scene-bg"></div>
       <div class="scene-bg-overlay"></div>
 
-      <!-- Top bar: title + controls -->
+      <!-- Top bar -->
       <div class="story-topbar">
         <div class="story-title-wrap">
           <span class="story-title-label">✦</span>
           <span id="story-title" class="story-title-text"></span>
         </div>
         <div class="topbar-actions">
-          <button id="history-btn" class="btn-icon" onclick="toggleHistory()" title="Story History">
-            📜 History
-          </button>
-          <button class="btn-icon danger" onclick="resetStory()" title="New Story">✕ New</button>
+          <button id="history-btn" class="btn-icon" onclick="toggleHistory()">📜 History</button>
+          <button class="btn-icon danger" onclick="resetStory()">✕ New</button>
         </div>
       </div>
 
-      <!-- History panel (slide-in) -->
+      <!-- History panel -->
       <div id="history-panel" class="history-panel">
         <div class="history-panel-header">
           <span>📖 Story So Far</span>
@@ -64,13 +50,9 @@
         <div id="history-list" class="history-list"></div>
       </div>
 
-      <!-- Main story layout -->
+      <!-- Main layout -->
       <div class="story-layout">
-
-        <!-- Left: character portraits -->
         <div id="portrait-rail" class="portrait-rail"></div>
-
-        <!-- Center: scene + choices -->
         <div class="scene-center">
           <div class="scene-card">
             <div id="emotion-badge" class="emotion-badge" style="display:none"></div>
@@ -78,13 +60,23 @@
           </div>
           <div id="choices-area" class="choices-grid"></div>
         </div>
-
       </div>
+
+      <!-- Agency input bar injected here by agency.js -->
+
     </section>
   </div>
 
+  <script src="config.js"></script>
   <script src="story.js"></script>
   <script src="visuals.js"></script>
+  <script src="chapters.js"></script>
+  <script src="agency.js"></script>
+  <script src="intro.js"></script>
+  <script src="interactive.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.3.2/pixi.min.js"></script>
+<script src="pixi-visuals.js"></script>
   <script src="app.js"></script>
+  <script src="voice.js"></script>
 </body>
 </html>
