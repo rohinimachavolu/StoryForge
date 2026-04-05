@@ -31,7 +31,7 @@ export function buildFirstMessage(prompt, ctx) {
       : 'Player chose **literary / D&D table** prose \u2014 rich but not purple.\n';
   return `Premise: "${prompt}"
 ${sheet}${proseHint}
-Follow that premise and player choices \u2014 no generic template arc. Ch.${chapter}/${max}, scene ${s}/${SCENES_PER_CHAPTER_MAX} (opening). Thread: "${beat}"
+Follow that premise and player choices \u2014 no generic template arc. If the premise references an existing fictional universe, ground the world in that lore (locations, factions, tone, rules) and **include key canon characters by name as NPCs** with their real personalities and speech patterns \u2014 but let the player reshape events. Ch.${chapter}/${max}, scene ${s}/${SCENES_PER_CHAPTER_MAX} (opening). Thread: "${beat}"
 ${dirBlock}Strong hook, clear stakes, 3\u20135 characters (incl. You) each with **gender** (female/male/neutral) and **voiceProfile** aligned to that gender. JSON only; scene text = readable prose only (no meta labels). **Include chapterThemes** (3\u20135 story-specific thematic labels for this chapter). Three choices: I vivid fork; II\u2013III short with quoted speech.`;
 }
 

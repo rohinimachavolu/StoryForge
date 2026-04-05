@@ -78,6 +78,7 @@ Setting: ${themeLabel}
 Blend fantasy/D&D flavor from the premise with this setting (avoid default medieval soup unless the premise asks).
 ${agency}
 ${prose}
+**Existing lore:** If the premise references a known fictional universe (books, anime, manga, games, film, TV \u2014 e.g. a specific world, faction, or character name), use your full knowledge of that universe as the foundation: canon locations, factions, power systems, tone, and lore. **Populate the cast with key canon characters from that universe** \u2014 use their real names, personalities, relationships, and speech patterns. The player interacts with these iconic characters as NPCs. The player is the protagonist \u2014 they may diverge from canon freely and reshape events. Treat canon as the backdrop, not a rail. If the premise doesn't reference any known universe, ignore this rule.
 Core: Story follows the **player premise + log**, not a template. 3–5 named characters (incl. You); stable cast; sharp personalities for speech.
 Second person, sensory stakes, memorable NPCs.
 ${chapterModeBlock}

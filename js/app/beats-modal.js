@@ -89,6 +89,10 @@ export function closeBeatsModal() {
     modal.hidden = true;
     modal.classList.remove('open');
   }
+  const prompt = document.getElementById('beats-apply-prompt');
+  if (prompt) prompt.hidden = true;
+  const saveBtn = document.getElementById('beats-save-btn');
+  if (saveBtn) saveBtn.style.display = '';
   beatsModalChapter = null;
   resetBeatsModalChrome();
 }
@@ -109,8 +113,41 @@ export function saveBeatsFromModal() {
   state.chapterThemesUserEdited[ch] = true;
   state.chapterTitles[ch] = (chapterTitleInput && chapterTitleInput.value.trim()) || '';
   state.chapterNarrationNotes[ch] = (note && note.value.trim()) || '';
-  closeBeatsModal();
   import('./sidebar.js').then(m => m.renderStoryArcSidebar());
+
+  if (state.currentScene && ch === state.chapter) {
+    showApplyPrompt();
+  } else {
+    closeBeatsModal();
+  }
+}
+
+function showApplyPrompt() {
+  const prompt = document.getElementById('beats-apply-prompt');
+  const saveBtn = document.getElementById('beats-save-btn');
+  if (saveBtn) saveBtn.style.display = 'none';
+  if (prompt) prompt.hidden = false;
+
+  const applyNext = document.getElementById('beats-apply-next');
+  const applyNow = document.getElementById('beats-apply-now');
+
+  const onNext = () => {
+    cleanup();
+    closeBeatsModal();
+  };
+  const onNow = () => {
+    cleanup();
+    closeBeatsModal();
+    import('./scene-choices.js').then(m => m.regenerateCurrentScene());
+  };
+
+  function cleanup() {
+    applyNext.removeEventListener('click', onNext);
+    applyNow.removeEventListener('click', onNow);
+  }
+
+  applyNext.addEventListener('click', onNext);
+  applyNow.addEventListener('click', onNow);
 }
 
 export function addBeatRow() {

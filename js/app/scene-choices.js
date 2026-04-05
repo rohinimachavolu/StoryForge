@@ -19,7 +19,7 @@ import {
   showError,
   showLoading
 } from './ui-loading.js';
-import { storyContext, systemPromptNextScene } from './story-bridge.js';
+import { storyContext, systemPrompt, systemPromptNextScene } from './story-bridge.js';
 import { renderHistoryPanel } from './history.js';
 
 function updateBG(emotion) {
@@ -74,7 +74,10 @@ export function renderChoices(choices) {
 
   const hint = document.createElement('p');
   hint.className = 'choices-hint';
-  hint.textContent = 'I = scenario fork · II–III = your move · IV = type your own.';
+  const isWitness = state.playerMode === 'witness';
+  hint.textContent = isWitness
+    ? 'I = scenario fork · II–III = your move.'
+    : 'I = scenario fork · II–III = your move · IV = type your own.';
   area.appendChild(hint);
 
   const kinds = [
@@ -99,48 +102,50 @@ export function renderChoices(choices) {
     area.appendChild(block);
   });
 
-  const userRow = document.createElement('div');
-  userRow.className = 'choice-user-row';
+  if (!isWitness) {
+    const userRow = document.createElement('div');
+    userRow.className = 'choice-user-row';
 
-  const lab = document.createElement('div');
-  lab.className = 'choice-user-heading';
-  lab.innerHTML = '<span class="choice-num">IV.</span><span>Your own action</span>';
+    const lab = document.createElement('div');
+    lab.className = 'choice-user-heading';
+    lab.innerHTML = '<span class="choice-num">IV.</span><span>Your own action</span>';
 
-  const ta = document.createElement('textarea');
-  ta.id = 'choice-user-textarea';
-  ta.className = 'choice-user-textarea';
-  ta.rows = 3;
-  ta.value = '';
-  ta.autocomplete = 'off';
-  ta.placeholder = 'Type your own move here, then Declare…';
+    const ta = document.createElement('textarea');
+    ta.id = 'choice-user-textarea';
+    ta.className = 'choice-user-textarea';
+    ta.rows = 3;
+    ta.value = '';
+    ta.autocomplete = 'off';
+    ta.placeholder = 'Type your own move here, then Declare…';
 
-  const goRow = document.createElement('div');
-  goRow.className = 'choice-user-actions';
-  const go = document.createElement('button');
-  go.type = 'button';
-  go.className = 'btn-user-choice-go';
-  go.textContent = 'Declare';
-  go.addEventListener('click', () => {
-    if (ta.disabled) return;
-    const v = ta.value.trim();
-    if (!v) {
-      ta.focus();
-      return;
-    }
-    makeChoice(v);
-  });
-  ta.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault();
-      go.click();
-    }
-  });
+    const goRow = document.createElement('div');
+    goRow.className = 'choice-user-actions';
+    const go = document.createElement('button');
+    go.type = 'button';
+    go.className = 'btn-user-choice-go';
+    go.textContent = 'Declare';
+    go.addEventListener('click', () => {
+      if (ta.disabled) return;
+      const v = ta.value.trim();
+      if (!v) {
+        ta.focus();
+        return;
+      }
+      makeChoice(v);
+    });
+    ta.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        go.click();
+      }
+    });
 
-  goRow.appendChild(go);
-  userRow.appendChild(lab);
-  userRow.appendChild(ta);
-  userRow.appendChild(goRow);
-  area.appendChild(userRow);
+    goRow.appendChild(go);
+    userRow.appendChild(lab);
+    userRow.appendChild(ta);
+    userRow.appendChild(goRow);
+    area.appendChild(userRow);
+  }
 }
 
 export function renderScene(data) {
@@ -243,5 +248,44 @@ export async function makeChoice(choice) {
     await advanceStoryWithChoice(choice);
   } catch {
     /* surfaced in advanceStoryWithChoice */
+  }
+}
+
+/**
+ * Re-generate the current scene using updated beats/directives
+ * without advancing the scene counter or pushing to history.
+ */
+export async function regenerateCurrentScene() {
+  if (!state.currentScene) return;
+  const lastChoice = state.history.length
+    ? state.history[state.history.length - 1].chosen
+    : state.prompt;
+  disableChoices(true);
+  showLoading('Regenerating scene with updated themes…');
+
+  try {
+    const msg = buildNextMessage(
+      state.history,
+      state.characters,
+      lastChoice,
+      storyContext(false)
+    );
+    const raw = await callAI(msg, systemPrompt());
+    const data = parseSceneJSON(raw);
+
+    if (data.characters && data.characters.length > 0) {
+      state.characters = mergeCharacterLists(state.characters, data.characters);
+    }
+
+    state.currentScene = data;
+    renderScene(data);
+  } catch (e) {
+    if (state.currentScene) {
+      renderScene(state.currentScene);
+      showApiNotice(`Could not regenerate: ${e.message}`);
+    } else {
+      showError(`${e.message} — try again.`);
+    }
+    disableChoices(false);
   }
 }
