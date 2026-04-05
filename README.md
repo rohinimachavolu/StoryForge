@@ -2,7 +2,7 @@
 
 > Enter a premise. Make choices. Watch your story come alive.
 
-Storyforge is a **frontend-only AI storytelling platform** where you describe a scenario and the AI generates a branching narrative around your decisions — complete with cinematic scene backgrounds, character portraits, and emotion-driven animated visuals.
+Storyforge is a **frontend-only AI storytelling platform** where you describe a scenario and the AI generates a branching narrative around your decisions — complete with cinematic scene backgrounds, character portraits, OpenAI-powered animated scene cards, and emotion-driven visuals.
 
 ![Storyforge Banner](https://image.pollinations.ai/prompt/cinematic%20dark%20fantasy%20storytelling%20interface%2C%20glowing%20book%2C%20atmospheric%2C%20painterly?width=1280&height=400&nologo=true)
 
@@ -10,9 +10,10 @@ Storyforge is a **frontend-only AI storytelling platform** where you describe a 
 
 ## ✨ Features
 
-- **AI-generated story scenes** — Groq (Llama 3.3 70B) generates structured scenes in real time based on your choices
+- **AI-generated story scenes** — OpenAI generates structured scenes in real time based on your choices
 - **Branching choices** — 3 meaningful options per scene that shape the narrative
 - **Dynamic backgrounds** — Pollinations.ai generates a unique scene image per location (bedroom, alley, throne room, jungle...)
+- **Animated scene cards** — OpenAI image generation creates a scene visual for each new story beat, then local motion effects turn it into a fast loop-like hero panel
 - **Character portraits** — AI-painted portraits for every character in your story
 - **Emotion-driven visuals** — p5.js animated particle backgrounds that change with the story mood
   - 🌹 Romance → floating hearts
@@ -30,7 +31,7 @@ Storyforge is a **frontend-only AI storytelling platform** where you describe a 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- A free [Groq API key](https://console.groq.com)
+- An [OpenAI API key](https://platform.openai.com/api-keys)
 - Python 3 (just for local server) or any static file server
 
 ### Setup
@@ -41,13 +42,21 @@ git clone https://github.com/rohinimachavolu/StoryForge.git
 cd StoryForge
 
 # Add your API key — create a config file (gitignored)
-echo "const API_KEY = 'your_groq_api_key_here';" > config.js
+cp config.example.js config.js
 ```
 
-Make sure `index.html` loads `config.js` before `story.js`:
+Add your OpenAI key in `config.js`:
+
+```js
+window.STORYFORGE_CONFIG = {
+  openAiApiKey: 'your_openai_api_key_here'
+};
+```
+
+Make sure `index.html` loads `config.js` before the app bundle:
 ```html
 <script src="config.js"></script>
-<script src="story.js"></script>
+<script type="module" src="app.js"></script>
 ```
 
 ### Run locally
@@ -65,9 +74,10 @@ Then open **http://localhost:8000** in your browser.
 storyforge/
 ├── index.html      # App structure and layout
 ├── style.css       # All styling — dark cinematic theme
-├── story.js        # Groq API calls, JSON parsing, image URL helpers
+├── story.js        # Story API calls, JSON parsing, image URL helpers
 ├── visuals.js      # p5.js animated backgrounds per emotion
 ├── app.js          # State management and UI rendering
+├── js/app/scene-video.js # OpenAI image fetch + animated scene card behavior
 ├── config.js       # Your API key (gitignored, create locally)
 └── .gitignore
 ```
@@ -85,7 +95,7 @@ storyforge/
    - 3–5 named characters with visual descriptions
    - 3 branching choices
 3. **Pick a choice** — the next scene is generated, consistent with all prior events
-4. Backgrounds, portraits, and particle effects update automatically
+4. Backgrounds, portraits, animated scene cards, and particle effects update automatically
 5. Click **📜 History** anytime to review past scenes
 
 ---
@@ -94,7 +104,8 @@ storyforge/
 
 | Layer | Technology |
 |---|---|
-| Language model | Groq API — Llama 3.3 70B Versatile |
+| Language model | OpenAI Chat Completions API |
+| Animated scene card art | OpenAI Images API (`gpt-image-1`) |
 | Image generation | Pollinations.ai (free, no key needed) |
 | Animated visuals | p5.js with Perlin noise |
 | Frontend | HTML, CSS, Vanilla JavaScript |
@@ -107,11 +118,11 @@ storyforge/
 Never commit your API key. This project uses a local `config.js` file that is gitignored:
 
 ```bash
-echo "const API_KEY = 'your_key';" > config.js
+echo "window.STORYFORGE_CONFIG = { openAiApiKey: 'your_key' };" > config.js
 echo "config.js" >> .gitignore
 ```
 
-If you accidentally push a key, **immediately regenerate it** at [console.groq.com](https://console.groq.com).
+If you accidentally push a key, **immediately regenerate it** at [platform.openai.com](https://platform.openai.com/api-keys).
 
 ---
 
