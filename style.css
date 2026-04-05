@@ -1371,3 +1371,62 @@ textarea::placeholder { color:var(--muted); }
 ::-webkit-scrollbar { width:4px; }
 ::-webkit-scrollbar-track { background:transparent; }
 ::-webkit-scrollbar-thumb { background:rgba(201,169,110,.25); border-radius:4px; }
+
+/* ── Narrator Fairy ornament (scene card) ───────────────────────────────── */
+.scene-narrator-ornament {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin-bottom: .85rem;
+}
+.scene-narrator-fairy {
+  width: 56px;
+  height: 74px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 10px rgba(201,169,110,.45)) drop-shadow(0 0 24px rgba(160,200,255,.25));
+  animation: fairyFloat 4s ease-in-out infinite;
+}
+.scene-narrator-rule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(201,169,110,.5), rgba(201,169,110,.0));
+  display: block;
+}
+@keyframes fairyFloat {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-5px); }
+}
+
+/* ── Intro header fairies ───────────────────────────────────────────────── */
+.book-setup-fairy-left,
+.book-setup-fairy-right {
+  flex-shrink: 0;
+}
+.book-setup-fairy-img {
+  width: 72px;
+  height: 96px;
+  filter: drop-shadow(0 0 14px rgba(201,169,110,.5)) drop-shadow(0 0 28px rgba(160,200,255,.3));
+  animation: fairyFloat 5s ease-in-out infinite;
+}
+.book-setup-fairy-flip {
+  transform: scaleX(-1);
+  animation: fairyFloatFlip 5s ease-in-out 1.5s infinite;
+}
+@keyframes fairyFloatFlip {
+  0%,100% { transform: scaleX(-1) translateY(0); }
+  50%      { transform: scaleX(-1) translateY(-6px); }
+}
+
+/* ── Portrait rail — character faces ───────────────────────────────────── */
+.portrait-img {
+  border-radius: 12px !important;
+  border-width: 2px !important;
+}
+.portrait-wrap::after {
+  content: '';
+  display: block;
+  width: 76px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(201,169,110,.35), transparent);
+  margin-top: .15rem;
+}

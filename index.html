@@ -21,12 +21,16 @@
     <section id="intro-screen">
       <div class="book-setup">
         <div class="book-setup-header" aria-hidden="true">
-          <span class="book-setup-header-orn">×</span>
+          <div class="book-setup-fairy-left">
+            <img src="narrator-fairy.svg" class="book-setup-fairy-img" alt="Narrator fairy"/>
+          </div>
           <div class="book-setup-header-center">
             <span class="book-setup-brand">STORYFORGE</span>
             <span class="book-setup-tagline">Choose your world. Shape your fate.</span>
           </div>
-          <span class="book-setup-header-orn">×</span>
+          <div class="book-setup-fairy-right">
+            <img src="narrator-fairy.svg" class="book-setup-fairy-img book-setup-fairy-flip" alt=""/>
+          </div>
         </div>
         <div class="book-setup-pages">
           <div class="book-page book-page-left">
@@ -180,6 +184,10 @@
           <div class="scene-card">
             <div id="api-notice" class="api-notice" style="display:none" role="status" aria-live="polite"></div>
             <div id="emotion-badge" class="emotion-badge" style="display:none"></div>
+            <div class="scene-narrator-ornament" aria-hidden="true">
+              <img src="narrator-fairy.svg" class="scene-narrator-fairy" alt=""/>
+              <span class="scene-narrator-rule"></span>
+            </div>
             <p id="scene-text" class="scene-text"></p>
           </div>
           <div id="choices-area" class="choices-grid"></div>
