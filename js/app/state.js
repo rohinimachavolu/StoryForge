@@ -24,7 +24,7 @@ export const state = {
   sceneInChapter:   1,
   /** When true for chapter N, do not overwrite ordered themes from the model on scene 1. */
   chapterThemesUserEdited: {},
-  ambientMusicEnabled: true,
+  ambientMusicEnabled: false,
   hp:               20,
   maxHp:            20,
   xp:               0,

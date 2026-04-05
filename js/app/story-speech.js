@@ -244,53 +244,54 @@ function voiceSoundsMale(v, profile) {
 
 function applyProsody(utt, profile, extraPitch = 0) {
   let base = 1;
-  let rate = 0.95;
+  let rate = 0.9;
   switch (profile) {
     case 'child':
-      base = 1.45;
-      rate = 1.12;
+      base = 1.22;
+      rate = 1.04;
       break;
     case 'warrior':
-      base = 0.72;
-      rate = 0.88;
+      base = 0.84;
+      rate = 0.9;
       break;
     case 'elder':
-      base = 0.78;
-      rate = 0.78;
+      base = 0.86;
+      rate = 0.84;
       break;
     case 'woman':
-      base = 1.25;
-      rate = 1.02;
-      break;
-    case 'woman_alt':
-      base = 1.35;
+      base = 1.08;
       rate = 0.96;
       break;
-    case 'man':
-      base = 0.82;
+    case 'woman_alt':
+      base = 1.12;
       rate = 0.94;
+      break;
+    case 'man':
+      base = 0.9;
+      rate = 0.9;
       break;
     case 'narrator':
     default:
       base = 1;
-      rate = 0.95;
+      rate = 0.86;
   }
-  utt.pitch = Math.min(2, Math.max(0.5, base + extraPitch));
-  utt.rate = Math.min(1.35, Math.max(0.65, rate));
+  utt.pitch = Math.min(1.75, Math.max(0.72, base + extraPitch * 0.65));
+  utt.rate = Math.min(1.12, Math.max(0.72, rate));
 }
 
 /**
- * Keep `lang` aligned with `voice` — forcing en-GB on an en-US voice
- * silences speech on Chrome/Edge. Light dampening only for narrator;
- * character voices keep their full prosody separation.
+ * Calm, game-style narration: slower, centered pitch, aligned lang with voice.
  */
-function applyBridgertonDelivery(utt, voice, isNarrator) {
+function applySoothingDelivery(utt, voice, isNarrator) {
   if (voice && voice.lang) {
     utt.lang = voice.lang;
   }
   if (isNarrator) {
-    utt.rate = Math.max(0.72, Math.min(1.08, utt.rate * 0.92));
-    utt.pitch = Math.min(1.85, Math.max(0.82, utt.pitch * 0.98));
+    utt.rate = Math.max(0.74, Math.min(0.98, utt.rate * 0.88));
+    utt.pitch = Math.min(1.12, Math.max(0.9, utt.pitch * 0.97));
+  } else {
+    utt.rate = Math.max(0.76, Math.min(1.02, utt.rate * 0.91));
+    utt.pitch = Math.min(1.28, Math.max(0.88, utt.pitch * 0.98));
   }
 }
 
@@ -400,12 +401,13 @@ export async function speakScene(sceneOrData, characters) {
 
     let extraPitch = 0;
     if (v && !isNarr && voiceSoundsMale(v, profile)) {
-      extraPitch = profile === 'child' ? 0.22 : 0.28;
+      extraPitch = profile === 'child' ? 0.14 : 0.18;
     }
 
+    utt.volume = 0.82;
     applyProsody(utt, profile, extraPitch);
     if (v) utt.voice = v;
-    applyBridgertonDelivery(utt, v, isNarr);
+    applySoothingDelivery(utt, v, isNarr);
 
     console.log('[TTS]', isNarr ? 'NARR' : `DLG [${seg.speaker}]`,
       '→ profile:', profile, '| voice:', v?.name || '(none)',

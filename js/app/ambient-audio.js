@@ -1,92 +1,78 @@
 /**
- * Light procedural pad; frequencies follow scene emotion.
- * WebAudio must be started/resumed inside a user gesture — not after fetch() — or browsers keep it silent.
+ * Real MP3 ambient only — never feed a 404 HTML page into <audio> (that decodes as harsh digital noise).
+ *
+ * Picks `audio/ambient-piano.mp3` only after a successful HEAD check; otherwise loads a gentle solo-piano track.
+ *
+ * Kevin MacLeod — "Meditation Impromptu 03" (CC BY 4.0)
+ * https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100168
+ *
+ * Playback must start inside a user gesture.
  */
 
-const EMOTION_PAIRS = {
-  calm: [174, 261],
-  romance: [196, 311],
-  happy: [220, 330],
-  adventure: [165, 247],
-  tension: [131, 196],
-  danger: [98, 147]
+const REMOTE_PIANO_AMBIENT =
+  'https://incompetech.com/music/royalty-free/mp3-royaltyfree/Meditation%20Impromptu%2003.mp3';
+
+const BASE_VOLUME = 0.16;
+
+const EMOTION_RATE = {
+  calm: 1,
+  romance: 1.01,
+  happy: 1.03,
+  adventure: 0.99,
+  tension: 0.96,
+  danger: 0.93
 };
 
-let ctx = null;
-let master = null;
-let o1 = null;
-let o2 = null;
-let g1 = null;
-let g2 = null;
-/** True only after a successful resume() from user input */
+let audio = null;
+let srcLocked = '';
 let running = false;
-
 let queued = { emotion: 'calm', enabled: true };
 
-function buildEngine() {
-  const AC =
-    typeof AudioContext !== 'undefined'
-      ? AudioContext
-      : typeof webkitAudioContext !== 'undefined'
-        ? webkitAudioContext
-        : null;
-  if (!AC || ctx) return;
-  ctx = new AC();
-  master = ctx.createGain();
-  master.gain.value = 0;
-  master.connect(ctx.destination);
+async function resolveAmbientSrc() {
+  const local = new URL('audio/ambient-piano.mp3', window.location.href).href;
+  try {
+    const r = await fetch(local, { method: 'HEAD', cache: 'no-store' });
+    if (r.ok) return local;
+  } catch (_) {
+    /* offline or CORS — use remote */
+  }
+  return REMOTE_PIANO_AMBIENT;
+}
 
-  o1 = ctx.createOscillator();
-  o2 = ctx.createOscillator();
-  o1.type = 'triangle';
-  o2.type = 'triangle';
-  g1 = ctx.createGain();
-  g2 = ctx.createGain();
-  g1.gain.value = 0.55;
-  g2.gain.value = 0.5;
-  o1.connect(g1);
-  o2.connect(g2);
-  g1.connect(master);
-  g2.connect(master);
-  o1.start();
-  o2.start();
+async function ensureAudio() {
+  if (audio && srcLocked) return;
+  const src = await resolveAmbientSrc();
+  if (!audio) {
+    audio = new Audio();
+    audio.loop = true;
+    audio.preload = 'auto';
+  }
+  audio.src = src;
+  srcLocked = src;
 }
 
 function applyQueued() {
-  if (!ctx || !master || !o1 || !o2 || !running) return;
-  const t = ctx.currentTime;
-  const pair = EMOTION_PAIRS[queued.emotion] || EMOTION_PAIRS.calm;
-  o1.frequency.cancelScheduledValues(t);
-  o2.frequency.cancelScheduledValues(t);
-  o1.frequency.setValueAtTime(o1.frequency.value, t);
-  o2.frequency.setValueAtTime(o2.frequency.value, t);
-  o1.frequency.linearRampToValueAtTime(pair[0], t + 0.5);
-  o2.frequency.linearRampToValueAtTime(pair[1], t + 0.5);
-
-  master.gain.cancelScheduledValues(t);
-  const target = queued.enabled ? 0.12 : 0;
-  master.gain.setValueAtTime(master.gain.value, t);
-  master.gain.linearRampToValueAtTime(target, t + 0.35);
+  if (!audio || !running) return;
+  const rate = EMOTION_RATE[queued.emotion] ?? EMOTION_RATE.calm;
+  audio.playbackRate = rate;
+  if (queued.enabled) {
+    audio.volume = BASE_VOLUME;
+    void audio.play().catch(() => {});
+  } else {
+    audio.volume = 0;
+    audio.pause();
+  }
 }
 
-/**
- * Call from click / pointerdown on the story UI. Required before any sound is audible.
- */
-export function activateAmbientOnUserGesture() {
-  buildEngine();
-  if (!ctx) return Promise.resolve();
-  if (ctx.state === 'suspended') {
-    return ctx.resume().then(() => {
-      running = true;
-      applyQueued();
-    });
-  }
+export async function activateAmbientOnUserGesture() {
+  await ensureAudio();
   running = true;
   applyQueued();
-  return Promise.resolve();
+  if (queued.enabled && audio) {
+    void audio.play().catch(() => {});
+  }
 }
 
-/** Update mood target; applies immediately only after activateAmbientOnUserGesture() has run. */
 export function setAmbientForEmotion(emotion, enabled) {
   queued = { emotion: emotion || 'calm', enabled: !!enabled };
   applyQueued();
@@ -94,9 +80,7 @@ export function setAmbientForEmotion(emotion, enabled) {
 
 export function stopAmbient() {
   queued = { ...queued, enabled: false };
-  if (!ctx || !master) return;
-  const t = ctx.currentTime;
-  master.gain.cancelScheduledValues(t);
-  master.gain.setValueAtTime(master.gain.value, t);
-  master.gain.linearRampToValueAtTime(0, t + 0.12);
+  if (!audio) return;
+  audio.volume = 0;
+  audio.pause();
 }

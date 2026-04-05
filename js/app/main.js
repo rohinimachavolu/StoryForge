@@ -32,8 +32,8 @@ function syncAmbientButton() {
   btn.classList.toggle('ambient-on', state.ambientMusicEnabled);
   btn.classList.toggle('ambient-off', !state.ambientMusicEnabled);
   btn.title = state.ambientMusicEnabled
-    ? 'Background mood music on (click to mute)'
-    : 'Background mood music off (click to enable)';
+    ? 'Soft piano ambient on (click to mute) — Kevin MacLeod Meditation Impromptu 03, CC BY incompetech.com'
+    : 'Soft piano ambient off (click to enable) — Kevin MacLeod, CC BY incompetech.com';
 }
 
 function syncSpeechButtons(speaking) {

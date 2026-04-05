@@ -29,7 +29,7 @@ export function resetStory() {
     chapterTitles: {},
     sceneInChapter: 1,
     chapterThemesUserEdited: {},
-    ambientMusicEnabled: true,
+    ambientMusicEnabled: false,
     hp: 20,
     maxHp: 20,
     xp: 0,
