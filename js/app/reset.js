@@ -1,6 +1,7 @@
 import { TOTAL_CHAPTERS } from '../story/constants.js';
 import { stopAmbient } from './ambient-audio.js';
 import { renderStoryArcSidebar } from './sidebar.js';
+import { clearSceneVideo } from './scene-video.js';
 import { clearVoiceAssignments, stopSpeech } from './story-speech.js';
 import { state } from './state.js';
 
@@ -44,6 +45,7 @@ export function resetStory() {
   document.getElementById('intro-screen').style.display = 'flex';
   document.getElementById('story-title').textContent = '';
   document.getElementById('scene-bg').style.backgroundImage = '';
+  clearSceneVideo();
   document.getElementById('history-panel').classList.remove('open');
   document.getElementById('history-btn').classList.remove('active');
   document.getElementById('chapter-chip').style.display = 'none';

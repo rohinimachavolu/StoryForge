@@ -7,6 +7,13 @@ export function getOpenAiKey() {
       ? String(window.STORYFORGE_OPENAI_KEY).trim()
       : '';
   if (fromWindow) return fromWindow;
+  const fromConfig =
+    window.STORYFORGE_CONFIG &&
+    typeof window.STORYFORGE_CONFIG.openAiApiKey !== 'undefined' &&
+    window.STORYFORGE_CONFIG.openAiApiKey !== null
+      ? String(window.STORYFORGE_CONFIG.openAiApiKey).trim()
+      : '';
+  if (fromConfig) return fromConfig;
   const legacyKey = typeof globalThis.API_KEY !== 'undefined' ? globalThis.API_KEY : '';
   if (legacyKey) {
     const k = String(legacyKey).trim();

@@ -12,6 +12,7 @@ import { escapeForHtml } from './html-utils.js';
 import { mergeCharacterLists, renderPortraits, setStoryTitle } from './portraits.js';
 import { formatSceneToHtml } from './scene-text.js';
 import { updateSceneBg } from './scene-bg.js';
+import { updateSceneVideo } from './scene-video.js';
 import {
   disableChoices,
   hideApiNotice,
@@ -181,6 +182,7 @@ export function renderScene(data) {
   else renderChoices(data.choices);
 
   if (data.location) updateSceneBg(data.location, data.emotion);
+  void updateSceneVideo(data);
   if (data.characters) renderPortraits(data.characters);
 
   updateChapterUI();

@@ -6,6 +6,7 @@ import {
   premiseArcPlotLines
 } from './plot-setup.js';
 import { renderScene } from './scene-choices.js';
+import { clearSceneVideo } from './scene-video.js';
 import { state } from './state.js';
 import { storyContext, systemPromptForChapterOpening } from './story-bridge.js';
 import { hideApiNotice, showLoading } from './ui-loading.js';
@@ -78,6 +79,7 @@ export async function executeStartChapterOneApi() {
 
 export function showStartFailure(message) {
   hideApiNotice();
+  clearSceneVideo();
   const story = document.getElementById('story-screen');
   story.classList.add('active');
   story.hidden = false;

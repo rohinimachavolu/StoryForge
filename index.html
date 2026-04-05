@@ -180,6 +180,20 @@
           <div class="scene-card">
             <div id="api-notice" class="api-notice" style="display:none" role="status" aria-live="polite"></div>
             <div id="emotion-badge" class="emotion-badge" style="display:none"></div>
+            <div id="scene-video-frame" class="scene-video-frame" data-state="idle" aria-live="polite">
+              <video
+                id="scene-video"
+                class="scene-video"
+                width="256"
+                height="256"
+                autoplay
+                muted
+                loop
+                playsinline
+                hidden
+              ></video>
+              <p id="scene-video-status" class="scene-video-status">The next scene animation will appear here.</p>
+            </div>
             <p id="scene-text" class="scene-text"></p>
           </div>
           <div id="choices-area" class="choices-grid"></div>
