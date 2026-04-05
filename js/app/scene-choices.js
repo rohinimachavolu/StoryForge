@@ -166,7 +166,11 @@ export function renderScene(data) {
     : `Chapter ${state.chapter} of ${max} · ${sceneLine}`;
   const sceneHtml =
     `<span class="chapter-inline">${escapeForHtml(line)}</span>` + formatSceneToHtml(data.scene);
-  document.getElementById('scene-text').innerHTML = sceneHtml;
+  const sceneTextEl = document.getElementById('scene-text');
+  sceneTextEl.innerHTML = sceneHtml;
+  sceneTextEl.dataset.theme = state.narrationTheme;
+  const emKey = data.emotion && EMOTION_CONFIG[data.emotion] ? data.emotion : 'calm';
+  sceneTextEl.dataset.emotion = emKey;
 
   if (state.sceneInChapter >= SCENE_CAP) renderChapterSceneCapNotice();
   else renderChoices(data.choices);

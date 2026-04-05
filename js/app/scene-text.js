@@ -56,13 +56,32 @@ function tryParseDialogueLine(trimmed) {
   const patterns = [
     /^(.+?)\s*—\s*\u201c(.+)\u201d\s*$/,
     /^(.+?)\s*—\s*"([\s\S]*)"\s*$/,
-    /^(.+?)\s*-\s*"([\s\S]*)"\s*$/
+    /^(.+?)\s*-\s*"([\s\S]*)"\s*$/,
+    /^(.+?)\s*:\s*\u201c(.+)\u201d\s*$/,
+    /^(.+?)\s*:\s*"([\s\S]*)"\s*$/
   ];
   for (const re of patterns) {
     const m = trimmed.match(re);
     if (m) return { speaker: m[1].trim(), text: m[2].trim() };
   }
   return null;
+}
+
+function formatNarrationWithInlineDialogue(text) {
+  const raw = String(text || '');
+  const quoteRe = /"([^"\n]+)"|\u201c([^”\n]+)\u201d/g;
+  let out = '';
+  let last = 0;
+  let m;
+  while ((m = quoteRe.exec(raw))) {
+    const full = m[0];
+    const inner = m[1] || m[2] || '';
+    out += escapeForHtml(raw.slice(last, m.index));
+    out += `<span class="inline-dialogue"><em>${escapeForHtml(full[0] === '"' ? `“${inner}”` : full)}</em></span>`;
+    last = m.index + full.length;
+  }
+  out += escapeForHtml(raw.slice(last));
+  return out;
 }
 
 /** Parse scene text: dialogue lines as Speaker — "words" vs narration paragraphs */
@@ -75,7 +94,13 @@ export function formatSceneToHtml(raw) {
   function flushNarr() {
     if (!narrBuf.length) return;
     const t = narrBuf.join(' ').replace(/\s+/g, ' ').trim();
-    if (t) blocks.push({ type: 'narr', html: escapeForHtml(t) });
+    if (t) {
+      blocks.push({
+        type: 'narr',
+        html: formatNarrationWithInlineDialogue(t),
+        className: /^[“"]/.test(t) ? 'scene-narration scene-narration-quotelead' : 'scene-narration'
+      });
+    }
     narrBuf.length = 0;
   }
   for (const line of lines) {
@@ -100,8 +125,8 @@ export function formatSceneToHtml(raw) {
   return blocks
     .map(b =>
       b.type === 'narr'
-        ? `<p class="scene-narration">${b.html}</p>`
-        : `<div class="dialogue-line"><span class="dialogue-speaker">${b.speaker}</span><span class="dialogue-quote">“${b.text}”</span></div>`
+        ? `<p class="${b.className || 'scene-narration'}">${b.html}</p>`
+        : `<div class="dialogue-line"><span class="dialogue-speaker">${b.speaker}</span><span class="dialogue-quote"><em>“${b.text}”</em></span></div>`
     )
     .join('');
 }

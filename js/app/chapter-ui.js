@@ -29,16 +29,6 @@ export function updateChapterUI() {
   chip.style.display = 'flex';
   chip.textContent = `Ch.${state.chapter}/${max} · S${state.sceneInChapter}/${SCENE_CAP} · ${short}`;
 
-  const storyScreen = document.getElementById('story-screen');
-  if (storyScreen) {
-    const t = state.narrationTheme;
-    if (t === 'victorian' || t === 'dystopian' || t === 'veilwild') {
-      storyScreen.dataset.storyTheme = t;
-    } else {
-      delete storyScreen.dataset.storyTheme;
-    }
-  }
-
   const row = document.getElementById('chapter-progress-row');
   const label = document.getElementById('chapter-progress-label');
   const fill = document.getElementById('chapter-progress-fill');
